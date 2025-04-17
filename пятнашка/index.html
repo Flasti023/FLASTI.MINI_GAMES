@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Пятнашки</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* Занимает всю высоту экрана */
+    margin: 0;  /* Убираем отступы по умолчанию */
+    background-color: #f0f0f0;
+    overflow: hidden; /* Убираем прокрутку */
+}
+
+#game-container {
+    width: 90vw; /* Занимает 90% ширины экрана */
+    max-width: 360px; /* Максимальная ширина для 9:16 экрана */
+    height: 640px;  /* Фиксированная высота для 9:16 (более надежно, чем aspect-ratio) */
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #333;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#board {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 2px;
+    box-sizing: border-box;
+}
+
+.tile {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 5px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.empty {
+    background-color: #ddd;
+    color: #ddd;
+    cursor: default;
+}
+
+#controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;  /* Выравниваем элементы по вертикали */
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 20px;
+    font-size: 2em;
+    border-radius: 10px;
+    display: none;
+}
+
+#difficulty-select {
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="board"></div>
+    <div id="message">Вы победили!</div>
+</div>
+
+<div id="controls">
+    <button id="shuffle-button">Перемешать</button>
+    <label for="difficulty-select">Сложность:</label>
+    <select id="difficulty-select">
+        <option value="3">3x3 (8)</option>
+        <option value="4" selected>4x4 (15)</option>
+        <option value="5">5x5 (24)</option>
+    </select>
+</div>
+
+<script>
+const boardElement = document.getElementById('board');
+const messageElement = document.getElementById('message');
+const shuffleButton = document.getElementById('shuffle-button');
+const difficultySelect = document.getElementById('difficulty-select');
+
+let board = [];
+let size = 4; // Размер доски (4x4)
+let emptyRow, emptyCol;
+let touchStartX = 0;
+let touchStartY = 0;
+
+function createBoard() {
+    board = [];
+    for (let i = 0; i < size; i++) {
+        board[i] = [];
+        for (let j = 0; j < size; j++) {
+            board[i][j] = i * size + j + 1;
+        }
+    }
+    board[size - 1][size - 1] = null; // Пустая плитка
+    emptyRow = size - 1;
+    emptyCol = size - 1;
+}
+
+function renderBoard() {
+    boardElement.innerHTML = '';
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            const tileValue = board[i][j];
+            const tileElement = document.createElement('div');
+            tileElement.classList.add('tile');
+            tileElement.textContent = tileValue;
+            tileElement.dataset.row = i;
+            tileElement.dataset.col = j;
+
+            if (tileValue === null) {
+                tileElement.classList.add('empty');
+                tileElement.textContent = '';
+            } else {
+                tileElement.addEventListener('click', moveTile); // Клик
+            }
+
+            boardElement.appendChild(tileElement);
+        }
+    }
+}
+
+function shuffleBoard(shuffleCount = 1000) {
+    for (let i = 0; i < shuffleCount; i++) {
+        const possibleMoves = getPossibleMoves(emptyRow, emptyCol);
+        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        swapTiles(emptyRow, emptyCol, randomMove.row, randomMove.col);
+        emptyRow = randomMove.row;
+        emptyCol = randomMove.col;
+    }
+}
+
+function getPossibleMoves(row, col) {
+    const moves = [];
+    if (row > 0) moves.push({ row: row - 1, col: col }); // Up
+    if (row < size - 1) moves.push({ row: row + 1, col: col }); // Down
+    if (col > 0) moves.push({ row: row, col: col - 1 }); // Left
+    if (col < size - 1) moves.push({ row: row, col: col + 1 }); // Right
+    return moves;
+}
+
+function swapTiles(row1, col1, row2, col2) {
+    const temp = board[row1][col1];
+    board[row1][col1] = board[row2][col2];
+    board[row2][col2] = temp;
+}
+
+function moveTile(event) {
+    const row = parseInt(event.target.dataset.row);
+    const col = parseInt(event.target.dataset.col);
+
+    if (isAdjacent(row, col, emptyRow, emptyCol)) {
+        swapTiles(row, col, emptyRow, emptyCol);
+        renderBoard(); // Перерисовываем после каждого хода
+        emptyRow = row;
+        emptyCol = col;
+        if (isSolved()) {
+            showMessage();
+        }
+    }
+}
+
+function isAdjacent(row1, col1, row2, col2) {
+    return (Math.abs(row1 - row2) + Math.abs(col1 - col2) === 1);
+}
+
+function isSolved() {
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            const expectedValue = i * size + j + 1;
+            if (i === size - 1 && j === size - 1) {
+                if (board[i][j] !== null) return false;
+            } else if (board[i][j] !== expectedValue) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function showMessage() {
+    messageElement.style.display = 'block';
+}
+
+function hideMessage() {
+    messageElement.style.display = 'none';
+}
+
+function startGame() {
+    createBoard();
+    shuffleBoard();
+    renderBoard();
+    hideMessage();
+}
+
+// --- Swipe Handling ---
+boardElement.addEventListener('touchstart', function(event) {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+});
+
+boardElement.addEventListener('touchend', function(event) {
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+    handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+});
+
+function handleSwipe(startX, startY, endX, endY) {
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    // Determine swipe direction (crude but effective)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal Swipe
+        if (deltaX > 50) { // Swipe Right
+            attemptMove(emptyRow, emptyCol - 1);
+        } else if (deltaX < -50) { // Swipe Left
+            attemptMove(emptyRow, emptyCol + 1);
+        }
+    } else {
+        // Vertical Swipe
+        if (deltaY > 50) { // Swipe Down
+            attemptMove(emptyRow - 1, emptyCol);
+        } else if (deltaY < -50) { // Swipe Up
+            attemptMove(emptyRow + 1, emptyCol);
+        }
+    }
+}
+
+function attemptMove(row, col) {
+    if (row >= 0 && row < size && col >= 0 && col < size) {
+        const tileValue = board[row][col];
+        if (tileValue !== null) {
+            swapTiles(row, col, emptyRow, emptyCol);
+            emptyRow = row;
+            emptyCol = col;
+            renderBoard();
+            if (isSolved()) {
+                showMessage();
+            }
+        }
+    }
+}
+
+// --- Event Listeners ---
+shuffleButton.addEventListener('click', startGame);
+
+difficultySelect.addEventListener('change', function() {
+    size = parseInt(this.value);
+    startGame();
+});
+
+// Initialize game on load
+startGame();
+</script>
+
+</body>
+</html>
