@@ -1,0 +1,115 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #222;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Предотвращает появление полос прокрутки */
+}
+
+#container {
+    width: 100%;
+    max-width: 400px; /* Ограничиваем ширину на больших экранах */
+    background-color: #333;
+    border-radius: 10px;
+    overflow: hidden; /* Обрезаем содержимое, выходящее за границы */
+}
+
+header {
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2em;
+}
+
+header p {
+    margin: 5px 0 0;
+    font-size: 1.2em;
+    font-style: italic;
+}
+
+main {
+    padding: 20px;
+}
+
+main h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+#game-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#game-list li {
+    margin-bottom: 10px;
+}
+
+#game-list a {
+    display: block;
+    padding: 10px 15px;
+    background-color: #555;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#game-list a:hover {
+    background-color: #777;
+}
+
+footer {
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8em;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    #container {
+        width: 100%; /* Занимает всю ширину экрана */
+        max-width: none; /* Убираем ограничение по ширине */
+        border-radius: 0; /* Убираем скругление углов */
+    }
+
+    header h1 {
+        font-size: 1.5em; /* Уменьшаем размер заголовка */
+    }
+
+    header p {
+        font-size: 1em; /* Уменьшаем размер подзаголовка */
+    }
+
+    main {
+        padding: 10px; /* Уменьшаем отступы */
+    }
+
+    main h2 {
+        font-size: 1.2em; /* Уменьшаем размер заголовка списка игр */
+    }
+
+    #game-list a {
+        padding: 8px 12px; /* Уменьшаем отступы для ссылок */
+    }
+}
+
+/* Адаптация под соотношение сторон 9:16 */
+@media (max-height: 500px) { /* Примерное ограничение высоты для устройств 9:16 в альбомной ориентации */
+  body {
+    align-items: flex-start; /* Выравниваем контент по верху */
+  }
+}
