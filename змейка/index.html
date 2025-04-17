@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Змейка (Mobile)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="snake-canvas"></canvas>
+        <div id="score-display">Счет: <span id="score">0</span></div>
+        <div id="game-over-screen">
+            <h1>Game Over!</h1>
+            <p>Счет: <span id="final-score">0</span></p>
+            <button id="restart-button">Начать заново</button>
+        </div>
+        <div id="mobile-controls">
+            <button id="up-button">↑</button>
+            <button id="down-button">↓</button>
+            <button id="left-button">←</button>
+            <button id="right-button">→</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
